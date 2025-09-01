@@ -1,7 +1,7 @@
 """
 Solutions to module 1
-Student: 
-Mail:
+Student: Oscar Jansson
+Mail:   
 Reviewed by:
 Reviewed date:
 """

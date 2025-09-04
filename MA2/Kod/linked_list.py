@@ -97,21 +97,31 @@ class LinkedList:
         if self.first is None:
             return False
         
-        if x == self.first.data:
+        elif x == self.first.data:
             self.first = self.first.succ
             return True
         
-        f = self.first
-        while f.succ:
-            if x == f.succ.data:
-                f.succ = f.succ.succ
-                return True
-            f = f.succ 
-        return False
+        else:        
+            f = self.first
+            while f.succ:
+                if x == f.succ.data:
+                    f.succ = f.succ.succ
+                    return True
+                f = f.succ 
+            return False
 
 
     def to_list(self):            # Ex4
-        pass
+
+        def _to_list(f):
+
+            if f is None:
+                return []
+            else:
+                return [f.data] + _to_list(f.succ)
+
+        return _to_list(self.first)
+
     
 
     def __str__(self):            # Ex5

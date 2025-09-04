@@ -1,7 +1,7 @@
 """
 Solutions to module 1
 Student: Oscar Jansson
-Mail: oscar.jansson0363@student.uu.se
+Mail: oscar.jansson.0363@student.uu.se
 Reviewed by: André Ramos Ekengren
 Reviewed date: 04/09-25
 """

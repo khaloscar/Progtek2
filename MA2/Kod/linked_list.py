@@ -122,6 +122,7 @@ class LinkedList:
 
         return _to_list(self.first)
 
+
     
 
     def __str__(self):            # Ex5

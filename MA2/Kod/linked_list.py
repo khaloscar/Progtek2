@@ -60,16 +60,54 @@ class LinkedList:
     # To be implemented
 
     def length(self):          #   Ex1
-        pass
+        n = 0
+        f = self.first
+        while f:
+            n +=1
+            f = f.succ
+
+        return n
 
     def mean(self):               
         pass
 
     def remove_last(self):       # Ex2
-        pass
+        f = self.first
+
+        # Check if empty
+        # Check if only one
+        # Else loop, can maybe combine the others
+        f = self.first
+        if f == None:
+            raise ValueError
+        elif f.succ is None:
+            last = f.data
+            self.first = None
+            return last
+        else:
+            while f:
+                if f.succ.succ is None:
+                    last = f.succ.data
+                    f.succ = None
+                    return last
+                f = f.succ
+
 
     def remove(self, x):         # Ex3
-        pass
+        if self.first is None:
+            return False
+        
+        if x == self.first.data:
+            self.first = self.first.succ
+            return True
+        
+        f = self.first
+        while f.succ:
+            if x == f.succ.data:
+                f.succ = f.succ.succ
+                return True
+            f = f.succ 
+        return False
 
 
     def to_list(self):            # Ex4
@@ -97,9 +135,19 @@ class LinkedList:
 
 def main():
     lst = LinkedList()
-    for x in [1, 1, 1, 2, 3, 3, 2, 1, 9, 7]:
+    for x in [3, 1, 2, 6]:
         lst.insert(x)
     lst.print()
+    lst.remove_last()
+    lst.print()
+    lst.remove_last()
+    lst.print()
+    lst.remove_last()
+    lst.print()
+    lst.remove_last()
+    lst.print()
+
+    print(lst.length())
 
     # Test code:
 

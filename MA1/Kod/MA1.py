@@ -1,9 +1,9 @@
 """
 Solutions to module 1
 Student: Oscar Jansson
-Mail:   
-Reviewed by:
-Reviewed date:
+Mail: oscar.jansson0363@student.uu.se
+Reviewed by: André Ramos Ekengren
+Reviewed date: 04/09-25
 """
 
 """
@@ -42,7 +42,7 @@ def multiply(m: int, n: int) -> int:
     if n==0 or m==0:
         return 0
     else:
-        if m < n:
+        if m > n:
             return m + multiply(m, n-1)
         else:
             return n + multiply(m-1,n)

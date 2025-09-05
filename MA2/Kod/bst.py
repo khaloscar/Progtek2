@@ -65,6 +65,24 @@ class BST:
         return n is not None
 
     # def contains(self, k) # Ex8: write recursive contains
+    def contains(self, k):
+        # Recursion -> call some _contains()
+        # A bt is a bt of bt
+        # base case, empty tree, empty Node? 
+        # Probably an or operation
+        if self is None:
+            return False
+        else:
+            def _contains(n: BST.Node):
+                if n is None:
+                    return False
+                elif k == n.key:
+                    return True
+                elif k < n.key:
+                    return _contains(n.left)
+                elif k > n.key:
+                    return _contains(n.right)
+            return _contains(self.root)
 
     def size(self):
         return self._size(self.root)
@@ -79,7 +97,14 @@ class BST:
 #   Methods to be completed
 #
 
-    def height(self):                 #        Ex9     
+    def height(self):                 #        Ex9   
+        # Have to check all nodes
+        # A node either has a child or it doesnt +1 height or +0
+        # All nodes w/ same depth can be added w/ boolean algebra
+        # All depth added algebraicly -> level order
+
+        # So like, depends on how to go through the tree, i.e tree traversals,
+        # preorder, postorder, inorder and level order
         pass
 
     def __str__(self):                #     Ex10       

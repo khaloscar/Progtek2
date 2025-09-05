@@ -69,7 +69,6 @@ class BST:
         # Recursion -> call some _contains()
         # A bt is a bt of bt
         # base case, empty tree, empty Node? 
-        # Probably an or operation
         if self is None:
             return False
         else:
@@ -102,24 +101,76 @@ class BST:
         # A node either has a child or it doesnt +1 height or +0
         # All nodes w/ same depth can be added w/ boolean algebra
         # All depth added algebraicly -> level order
-
         # So like, depends on how to go through the tree, i.e tree traversals,
         # preorder, postorder, inorder and level order
-        pass
 
-    def __str__(self):                #     Ex10       
-        pass
+        # Get a BTS
+        if self.root is None:
+            return 0
+        else:
+            # Get the biggest number from either the left or right child
+            def _height(n: BST.Node):
+                if n is None:
+                    return False
+                else:
+                    left = _height(n.left)
+                    right = _height(n.right)
 
-    def to_list(self):                      #   Ex11   
-        pass
+                        # a * (a > b) is needed because python evaluates the first truth in an 'or' statement
+                        # I.e T or 5 -> T
+                        # but F or 5 -> 5
+                        # and 3 or 5 -> 3
+                        # but we want 3 or 5 -> 5 
+                        # or just do 1 + max(left,right)
+                    return 1 + (left*(left > right) or right*(left <= right))
+            
+
+            return _height(self.root)
+
+    def __str__(self):                #     Ex10
+        if self.root is None:
+            return '<>'
+        else:
+            it = iter(self)
+            strout = f'<{next(it)}'
+            for e in it:
+                strout += f', {e}'
+
+
+    def to_list(self):                      #   Ex11
+        return [n for n in self]
     """
 Complexity of to_list:
+    1. we create the list as we go, n complexity
 """
 
-    def to_LinkedList(self):    
-        pass             #     Ex12
+    def to_LinkedList(self):    #     Ex12
+        if self.root is None:
+            return LinkedList() 
+        else:
+            output = LinkedList()
+
+            # A generator from highest to lowest
+            def _it_bw(n: BST.Node):
+                if n.right:
+                    yield from n.right
+                yield n.key
+                if n.left:
+                    yield from n.left
+                    
+            it = _it_bw(self.root)
+            output.first =  output.Node(next(it), None)
+            for e in _it_bw(self.root):
+                output.first = output.Node(e, output.first)
+            return output
+
+
+
+
+        
     """
 Complexity of _LinkedList:
+    Create the list as we go, n complexity
 """
     def remove(self, key): #
         self.root = self._remove(self.root, key)
@@ -158,6 +209,8 @@ def main():
     for k in [0, 1, 2, 5, 9]:
         print(f"contains({k}): {t.contains(k)}")
 
+    print(t.to_list())
+
 
 if __name__ == "__main__":
     main()
@@ -167,10 +220,27 @@ if __name__ == "__main__":
 Ex14: What is the generator good for?
 ==============================
 
-1. computing size?
+1. computing size? -> n^2 complexity
+    Size of BST is just the amnt of nodes,
+    so the generator is a good choice, n complexity
 2. computing height?
+        no, creating the generator destroys the information contained in each node
+        (and implicitly for the strucute) as a whole 
+        it more or less flattens the tree to a ordered 1D vector
+        e.g: 
+            [1,2,3,4,5] -> BST | depth 5
+            [3,1,4,2,5] -> BST | depth 3
+            but
+        3 -> 1 
 3. contains?
+    no? same spiel as computing size
+    n complexity to create generator
+    then  worst case n (or n/2 average) complexity to iterate through until finding value
+    best case n complexity
+    When u could just compare values as you go through
 4. insert?
+    no, the generator flattens the tree so I loose information of where to insert the
+    number
 5. remove?
 
 """

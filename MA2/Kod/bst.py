@@ -135,6 +135,7 @@ class BST:
             strout = f'<{next(it)}'
             for e in it:
                 strout += f', {e}'
+            return strout + '>'
 
 
     def to_list(self):                      #   Ex11
@@ -153,13 +154,11 @@ Complexity of to_list:
             # A generator from highest to lowest
             def _it_bw(n: BST.Node):
                 if n.right:
-                    yield from n.right
+                    yield from _it_bw(n.right)
                 yield n.key
                 if n.left:
-                    yield from n.left
+                    yield from  _it_bw(n.left)
                     
-            it = _it_bw(self.root)
-            output.first =  output.Node(next(it), None)
             for e in _it_bw(self.root):
                 output.first = output.Node(e, output.first)
             return output
@@ -179,10 +178,10 @@ Complexity of _LinkedList:
         if r is None:
             return None
         elif k < r.key:
-            pass
+            r.left = self._remove(r.left, k)
             # r.left = left subtree with k removed
         elif k > r.key:
-            pass
+            r.right = self._remove(r.right, k)
             # r.right =  right subtree with k removed
         else:  # This is the key to be removed
             if r.left is None:     # Easy case
@@ -190,18 +189,31 @@ Complexity of _LinkedList:
             elif r.right is None:  # Also easy case
                 return r.left
             else:  # This is the tricky case.
-                pass
+                # enter r.right
+                # go left as far as possible
+                r.key = self._smol(r.right)
                 # Find the smallest key in the right subtree
                 # Put that key in this node
                 # Remove that key from the right subtree
         return r  # Remember this! It applies to some of the cases above
 
+    def _smol(self, r):
+        # Find leftmost node
+        # Effectively rmv it
+        # and pass back its value to parent call
+        if r.left is None:
+            return r.key, r.right
+        else: 
+            key, r.left = self._smol(r.left)
+            return key
 
 
 def main():
     t = BST()
-    for x in [4, 1, 3, 6, 7, 1, 1, 5, 8]:
+    l = LinkedList()
+    for x in [5, 3, 8, 1, 4, 6, 9, 2, 7]:
         t.insert(x)
+        l.insert(x)
     t.print()
     print()
 
@@ -209,8 +221,9 @@ def main():
     for k in [0, 1, 2, 5, 9]:
         print(f"contains({k}): {t.contains(k)}")
 
-    print(t.to_list())
-
+    l2 = t.to_LinkedList()
+    print(f'l1: {l}')
+    print(f'l2: {l2}')
 
 if __name__ == "__main__":
     main()
@@ -220,27 +233,27 @@ if __name__ == "__main__":
 Ex14: What is the generator good for?
 ==============================
 
-1. computing size? -> n^2 complexity
+1. computing size? -> n complexity
     Size of BST is just the amnt of nodes,
-    so the generator is a good choice, n complexity
+    so the generator is an okay choice, n complexity
 2. computing height?
         no, creating the generator destroys the information contained in each node
-        (and implicitly for the strucute) as a whole 
-        it more or less flattens the tree to a ordered 1D vector
+        (and implicitly for the structure) 
+        it flattens the tree to a ordered 1D vector
         e.g: 
-            [1,2,3,4,5] -> BST | depth 5
-            [3,1,4,2,5] -> BST | depth 3
-            but
-        3 -> 1 
+            seq [1,2,3,4,5] to BST | depth 5
+            seq [3,1,4,2,5] to BST | depth 3
+            so if we flatten the tree, we have to "rebuild" it 
+            to get the height back i.e redo whatever is already done
+        maybe a generator could work better if you somehow yield each level
 3. contains?
-    no? same spiel as computing size
-    n complexity to create generator
-    then  worst case n (or n/2 average) complexity to iterate through until finding value
-    best case n complexity
-    When u could just compare values as you go through
+    contains is a search operation, which for the average tree is log n, and a h operation
+    flattening the tree is a linear search which on average and worst case is n operation
 4. insert?
-    no, the generator flattens the tree so I loose information of where to insert the
-    number
+    no, inserting something requires the Node object. Besides, searching for the correct place
+    to insert a value is a log n operation for the average tree
 5. remove?
+    same spiel as above
+
 
 """

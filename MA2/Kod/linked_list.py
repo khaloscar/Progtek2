@@ -12,6 +12,26 @@ class Person: #for Ex7
 
     def __str__(self):
         return f"{self.name}:{self.pnr}"
+    
+    def __lt__(self, b):
+        return self.pnr < b.pnr
+
+    def __le__(self,b):
+        return self.pnr <= b.pnr
+
+    def __eq__(self, b):
+        return self.pnr == b.pnr
+    
+    def __gt__(self, b):
+        return self.pnr > b.pnr
+
+    def __ge__(self,b):
+        return self.pnr >= b.pnr
+
+    def __ne__(self, b):
+        return self.pnr != b.pnr
+    
+       
 
 
 class LinkedList:
@@ -123,10 +143,18 @@ class LinkedList:
         return _to_list(self.first)
 
 
-    
 
     def __str__(self):            # Ex5
-        pass
+
+        if self.first is None:
+            return '()'
+        else:
+            iterator = iter(self)
+            output = f'({next(iterator)}'
+            for e in iterator:
+                output += f', {e}'
+
+        return output + ')'
 
     def copy(self):
         result = LinkedList()
@@ -134,31 +162,48 @@ class LinkedList:
             result.insert(x)
         return result
     ''' Complexity for this implementation: 
-
+        main for loop goes through all elements -> n
+        inner while loop is basically the main for loop in reverse -> n
+        so complexity is O(n^2).
     '''
 
     def copy(self):               # Ex6, Should be more efficient
-        pass                      
-    ''' Complexity for this implementation:
+        output = LinkedList()
 
+        if self.first is None:
+            return output
+        
+        else:
+            def _copy(f):
+                if f is None:
+                    return None
+                else:
+                    return output.Node(f.data,
+                                       _copy(f.succ))
+
+            output.first = output.Node(self.first.data,
+                                        _copy(self.first.succ))
+            return output                  
+    ''' Complexity for this implementation:
+        ''A lst is a Node linked to a list of Nodes''
+        Uses recursion w/ base case node None type
+        Uses the fact that a lst object is a ordered chain
+            from low to high integers
+        I.e create new nodes in .copy as you iterate through self
+        Pretty much n complexity
     '''
 
 
 def main():
-    lst = LinkedList()
-    for x in [3, 1, 2, 6]:
-        lst.insert(x)
-    lst.print()
-    lst.remove_last()
-    lst.print()
-    lst.remove_last()
-    lst.print()
-    lst.remove_last()
-    lst.print()
-    lst.remove_last()
-    lst.print()
+    plist = LinkedList()
+    print(plist)
+    p = Person('Anakin', 66)
+    plist.insert(p)
+    print(plist)
+    q = Person('Mario', 64)
+    plist.insert(q)
+    print(plist)
 
-    print(lst.length())
 
     # Test code:
 

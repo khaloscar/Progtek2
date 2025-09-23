@@ -1,9 +1,9 @@
 """ linked_list.py
 
-Student:
-Mail:
-Reviewed by:
-Date reviewed:
+Student: Oscar Jansson
+Mail: oscar.jansson.0363@student.uu.se
+Reviewed by: Carl Fröding
+Date reviewed: 2025-09-23
 """
 class Person: #for Ex7
     def __init__(self, name, pnr):
@@ -88,8 +88,15 @@ class LinkedList:
 
         return n
 
-    def mean(self):               
-        pass
+    def mean(self):
+        n = 0
+        s = 0               
+        f = self.first
+        while f:
+            n += 1
+            s += f.data
+            f = f.succ
+        return s/n
 
     def remove_last(self):       # Ex2
         f = self.first

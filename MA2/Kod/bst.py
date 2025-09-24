@@ -1,9 +1,9 @@
 """ bst.py
 
-Student:
-Mail:
+Student: Oscar Jansson 
+Mail: oscar.jansson.0363@student.uu.se
 Reviewed by:
-Date reviewed:
+Date reviewed: 2025-09-23
 """
 
 

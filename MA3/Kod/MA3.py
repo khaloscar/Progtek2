@@ -1,9 +1,9 @@
 """ MA3.py
 
-Student:
-Mail:
-Reviewed by:
-Date reviewed:
+Student: Oscar Jansson
+Mail:   oscar.jansson.0363@student.uu.se
+Reviewed by: Carl Fröding
+Date reviewed: 24-09-2025
 
 """
 import random

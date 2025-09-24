@@ -1,0 +1,80 @@
+ssh sveek137@atterbom.it.uu.se
+
+ls 
+
+ls -la
+
+pwd
+
+cd ..
+
+pwd
+
+ls
+
+cd /
+
+ls
+
+cd
+
+env
+
+echo $SHELL
+
+echo $PATH
+echo $PATH |sed -e 's/:/ /g'
+echo $PATH |sed -e 's/:/ /g'|xargs ls
+echo $PATH |sed -e 's/:/ /g'|xargs ls|wc -l
+echo $PATH |sed -e 's/:/ /g'|xargs ls|wc -l > nfiles.txt
+
+cat nfiles.txt
+
+top
+
+mkdir demolinux
+
+cd demolinux
+
+pwd
+
+ls -la
+
+nano test.py
+
+#!/usr/bin/python3
+print("hello from python")
+
+
+python3 test.py
+
+./test.py
+
+echo $PATH
+
+ls -la
+
+man chmod
+
+chmod 755 test.py
+
+./test.py
+
+nano myfind
+
+#!/bin/sh
+echo "These are all Python files:"
+find .|grep py$
+
+
+chmod 755 myfind
+
+./myfind
+
+mkdir adirectory
+
+cp test.py adirectory/hello.py
+
+./myfind
+
+adirectory/hello.py

@@ -1,8 +1,8 @@
 """ bst.py
 
-Student: Oscar Jansson 
+Student: Oscar Jansson
 Mail: oscar.jansson.0363@student.uu.se
-Reviewed by:
+Reviewed by: Carl Fröding
 Date reviewed: 2025-09-23
 """
 
@@ -201,6 +201,7 @@ Complexity of _LinkedList:
         # Find leftmost node
         # Effectively rmv it
         # and pass back its value to parent call
+        # convoluted
         if r.left is None:
             return r.key, r.right
         else: 

@@ -150,11 +150,11 @@ def main():
     start = pc()
     sphere_volume(n,d)
     stop = pc()
-    print(f"Ex4: Sequential time of {d} and {n}: {stop-start:.3}s")
+    print(f"Ex4: Sequential time of d {d} and n {n}: {stop-start:.3}s")
     start = pc()
     res = sphere_volume_parallel2(n,d)
     stop = pc()
-    print(f"Ex4: parallel time of {d} and {n}: {stop-start:.3}s")
+    print(f"Ex4: parallel time of d {d} and n {n}: {stop-start:.3}s")
     print(f'Parallel time result: {res}')
 
     

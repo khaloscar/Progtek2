@@ -6,46 +6,66 @@ import numpy as np
 
 class Particle:
 
-    def __init__(self, canvas, mean_mass=20, spread='default', width=800, height=600):
+    def __init__(self, canvas, mean_mass=25, spread='default'):
         std = {'tight':0.1, "small":0.25, 'moderate':0.5, 'broad':0.75, 'wide':1, 'default':1.2}
         self.canvas = canvas
         mu = np.log(mean_mass) - 0.5*std[spread]**2
         self.mass = np.random.lognormal(mu, std[spread])
         self.radius = math.sqrt(self.mass)
-        self.x = rnd.uniform(self.radius, width - self.radius)
-        self.y = rnd.uniform(self.radius, height - self.radius)
-        self.vx = rnd.uniform(-1,1)/2
-        self.vy = rnd.uniform(-1,1)/2
+        self.x = rnd.uniform(self.radius, float(self.canvas['width']) - self.radius)
+        self.y = rnd.uniform(self.radius, float(self.canvas['height']) - self.radius)
+        self.vx = 0
+        self.vy = 0
+        self.ax = 0
+        self.ay = 0
         self.color = self.mass_to_color()
 
-    def mass_to_color(self, min_mass=1, mid_mass=100, max_mass=200):
+    def mass_to_color(self, min_mass=1, mid_mass=50, max_mass=100):
+        if self.mass > 300:
+            return "#ffffff"
         # Clamp mass safely
         mass = max(min(self.mass, max_mass), min_mass)
-  
-        # Define RGB anchors
-        c1 = (0, 255, 255)  # turquoise
-        c2 = (0, 0, 255)    # blue
-        c3 = (255, 0, 0)    # red
 
         if mass <= mid_mass:
             # Interpolate from c1 → c2
             t = (mass - min_mass) / (mid_mass - min_mass)
-            r = int(c1[0] + t * (c2[0] - c1[0]))
-            g = int(c1[1] + t * (c2[1] - c1[1]))
-            b = int(c1[2] + t * (c2[2] - c1[2]))
+            r = 0
+            g = 255*(1-t)
+            b = 255
         else:
             # Interpolate from c2 → c3
             t = (mass - mid_mass) / (max_mass - mid_mass)
-            r = int(c2[0] + t * (c3[0] - c2[0]))
-            g = int(c2[1] + t * (c3[1] - c2[1]))
-            b = int(c2[2] + t * (c3[2] - c2[2]))
+            r = 255*t
+            g = 0
+            b = 255*(1-t)
 
-        return f"#{r:02x}{g:02x}{b:02x}"
-    
+        return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
+
     def update_position(self):
         self.x += self.vx
         self.y += self.vy
         self.canvas.move(self.id, self.vx, self.vy)
+        
+        r = self.radius
+        restitution = 1.0
+
+        if self.x - r < 0:
+            self.x = r
+            self.vx = -self.vx * restitution
+        elif self.x + r > int(self.canvas['width']):
+            self.x = int(self.canvas['width']) - r
+            self.vx = -self.vx * restitution
+
+        if self.y - r < 0:
+            self.y = r
+            self.vy = -self.vy * restitution
+        elif self.y + r > int(self.canvas['height']):
+            self.y = int(self.canvas['height']) - r
+            self.vy = -self.vy * restitution
+
+    def update_velocity(self):
+        self.vx += self.ax
+        self.vy += self.ay
 
 class Simulation:
 
@@ -53,9 +73,20 @@ class Simulation:
         self.root = root
         self.root.title('God damn balls! 🔴')
         
-        # Screen settings 
-        self.screen_width = 800
-        self.screen_height = 600
+        # Screen settings px
+        self.screen_width = 1600
+        self.screen_height = 900
+
+        # Standard particle generation, log-normal distribution of mass
+        # Standard values
+        self.particles = []
+        self.num_particles = 50
+        self.mean_mass = 25
+        self.G = 0.5
+        self.dt = 0.016
+
+        self.running = False
+        self.after_id = None
 
         self.canvas = tk.Canvas(root,
                                 width=self.screen_width,
@@ -63,21 +94,35 @@ class Simulation:
                                 bg='black')
         self.canvas.pack()
 
-        # Standard particle generation, log-normal distribution of mass
-        self.particles = []
-        self.num_particles = 50
-        self.mean_mass = 20
+        self.bottom_frame = tk.Frame(root, bg="#fef2c8")
+        self.bottom_frame.pack()
 
         # Buttons
-        button_frame = tk.Frame(master=root, bg="#fef2c8")
-        button_frame.pack(pady=10)
+        button_frame = tk.Frame(master=self.bottom_frame, bg="#fef2c8")
+        button_frame.pack(side=tk.RIGHT,pady=10)
 
         self.start_button = ttk.Button(button_frame, text='Start', command=self.start_simulation)
         self.pause_button = ttk.Button(button_frame, text='Pause', command=self.pause_simulation)
         self.start_button.pack(side=tk.LEFT, padx=5), self.pause_button.pack(side=tk.LEFT, padx=5)
+        self.pause_button.config(state="disabled")
+
         # Inputs/settings
 
-        self.running = False
+        input_frame = tk.Frame(master=self.bottom_frame, bg="#fef2c8")
+        input_frame.pack(side=tk.RIGHT, pady=10)
+
+        mean_frame = tk.Frame(input_frame, bg="#fef2c8", width=25)
+        mean_frame.pack()
+        self.mean_entry = tk.Entry(mean_frame, fg="black", bg="white", width=25)
+        self.mean_label = tk.Label(mean_frame, text=f'Mean mass: {self.mean_mass}', bg="#fef2c8")
+
+        n_particles_frame = tk.Frame(input_frame, bg="#fef2c8", width=25)
+        n_particles_frame.pack()
+        self.n_particles_entry = tk.Entry(n_particles_frame, fg="black", bg="white", width=25)
+        self.n_particles_label = tk.Label(n_particles_frame, text=f'N particles: {self.num_particles}', bg="#fef2c8")
+
+        self.mean_label.pack(), self.mean_entry.pack(padx=5) 
+        self.n_particles_label.pack(), self.n_particles_entry.pack(padx=5) 
 
     def create_particles(self):
         self.canvas.delete('all')
@@ -86,9 +131,7 @@ class Simulation:
             particle = Particle(
                 canvas=self.canvas,
                 mean_mass=self.mean_mass,
-                spread='default',
-                width=self.screen_width,
-                height=self.screen_height)
+                spread='default')
             
             particle.id = self.canvas.create_oval(
                 particle.x - particle.radius,
@@ -99,32 +142,156 @@ class Simulation:
             )
             self.particles.append(particle)
 
-    def move_particles(self):
+    def update_particles(self):
+        # update acc
+        # update vel
+        # update pos
+        self.update_acc()
         for particle in self.particles:
+            particle.update_velocity()
             particle.update_position()
 
+    def update_acc(self):
+        particles = self.particles
+        n_particles = len(particles)
+        ax, ay = [0]*n_particles, [0]*n_particles
+
+        i = 0
+        while i < len(particles):
+            p1 = particles[i]
+            j = i+1
+            while j < len(particles):
+                p2 = particles[j]
+                
+                # F = G m1 m2 / dist*2, force direction given by vec (x2-x1)/dist -> F = Gm1m2(x2-x1)/dist**3
+                # a1 = Gm2(x2-x1)/dist**3
+                # a2 = Gm1(x2-x1)/dist**3
+                dx = p2.x - p1.x
+                dy = p2.y - p1.y
+                dist = math.sqrt((dx)**2 + (dy)**2 + 0.01)
+    
+                facx, facy = self.G*dx/dist**3, self.G*dy/dist**3
+                ax[i] += facx*p2.mass
+                ay[i] += facy*p2.mass
+                ax[j] += -facx*p1.mass
+                ay[j] += -facy*p1.mass
+
+                j += 1
+            i += 1
+        
+        # All acc for ea particle done, now update each particle obj.
+        for i, p in enumerate(particles):
+            p.ax, p.ay = ax[i], ay[i]
+
     def start_simulation(self):
+        self._stop_loop()
+        mean_entry = self.mean_entry.get()
+        try:
+            mean_entry = float(mean_entry)
+            mean_entry = min(max(mean_entry,5), 100)
+            self.mean_mass = mean_entry
+        except ValueError:
+            self.mean_mass = 25
+            pass
+        n_particles_entry = self.n_particles_entry.get()
+        try:
+            n_particles_entry = int(n_particles_entry)
+            n_particles_entry = min(max(2, n_particles_entry), 101)
+            self.n_particles_entry = n_particles_entry
+        except ValueError:
+            self.n_particles_entry = 50
+
+        self.mean_label.config(text=f'Mean mass: {self.mean_mass}')
+        self.n_particles_label.config(text=f'N particles: {self.num_particles}')
+
+
+        self.pause_button.config(state="normal", text="Pause")
+        self.start_button.config(text="Restart")
         self.running = True
         self.create_particles()
-        self.root.after(10, self.update_simulation)
+        self._schedule_next()
+
+    def _schedule_next(self):
+        self.after_id = self.root.after(10, self.update_simulation)
+
+    def _stop_loop(self):
+        if self.after_id is not None:
+            self.root.after_cancel(self.after_id)
+            self.after_id = None
 
     def pause_simulation(self):
-        self.running = False
+        if self.running:
+            self.running = False
+            self.pause_button.config(text='Play')
+            self._stop_loop()
+        else:
+            self.running = True
+            self.pause_button.config(text='Pause')
+            self._schedule_next()
+
+    def handle_particle_collision(self):
+        # [p0, p1, p2, ..., pn-1]
+        # pass into function self.particles[1:] ? 
+        # is p2 pos + radius within p1 circle?
+        i = 0
+        particles = self.particles
+        while i < len(particles):
+            p1 = particles[i]
+            j = i+1
+            merged = False
+            while j < len(particles):
+                p2 = particles[j]
+                if self.check_particle_collision(p1, p2):
+                    self.merge_particle_params(p1,p2)
+                    self.canvas.itemconfig(p1.id, fill=p1.color, outline='')
+                    self.canvas.coords(p1.id, p1.x - p1.radius, p1.y - p1.radius, p1.x + p1.radius, p1.y + p1.radius)
+
+                    self.canvas.delete(p2.id)
+                    particles.pop(j)
+                    merged = True
+                else:
+                    j += 1
+            if not merged:
+                i += 1
+
+    def check_particle_collision(self, p1: Particle,p2: Particle) -> bool:
+        center_distance  = (p1.x - p2.x)**2 + (p1.y - p2.y)**2
+        total_radius = (p1.radius + p2.radius)**2
+        if center_distance <= total_radius:
+            return True
+        else:
+            return False
+    
+    def merge_particle_params(self, p1:Particle, p2: Particle):
+        # New particle params
+        new_mass = p1.mass + p2.mass
+        new_radius = math.sqrt(new_mass)
+        new_x  = (p1.mass * p1.x + p2.mass * p2.x)/new_mass
+        new_y  = (p1.mass * p1.y + p2.mass * p2.y)/new_mass
+        new_vx = (p1.mass * p1.vx + p2.mass * p2.vx)/new_mass
+        new_vy = (p1.mass * p1.vy + p2.mass * p2.vy)/new_mass
+
+        # Update p1
+        p1.mass = new_mass
+        p1.color = p1.mass_to_color()
+        p1.radius = new_radius
+        p1.x, p1.y = new_x, new_y
+        p1.vx, p1.vy = new_vx, new_vy
 
     def update_simulation(self):
         if not self.running:
             return
-        self.move_particles()
-        self.root.update()
-        self.root.after(10, self.update_simulation)
+        self.update_particles()
+        self.handle_particle_collision()
+        self._schedule_next()
         
+
 
 def main():
 
     window = tk.Tk()
     program = Simulation(window)
     window.mainloop()
-
 
 if __name__ == "__main__":
     main()

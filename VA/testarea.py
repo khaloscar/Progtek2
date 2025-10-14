@@ -1,10 +1,55 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Desired linear-space mean and spread (your target intuition)
-a = [1,2,3]
-a.clear()
-print(a)
+def mass_to_color(mass, min_mass=1, mid_mass=50, max_mass=100):
+    if mass> 300:
+        return "#ffffff"
+    # Clamp mass safely
+    mass = max(min(mass, max_mass), min_mass)
+
+    # Define RGB anchors
+    c1 = (0, 255, 255)  # turquoise
+    c2 = (0, 0, 255)    # blue
+    c3 = (255, 0, 0)    # red
+
+    if mass <= mid_mass:
+        # Interpolate from c1 → c2
+        t = (mass - min_mass) / (mid_mass - min_mass)
+        r = 0
+        g = 255*(1-t)
+        b = 255
+    else:
+        # Interpolate from c2 → c3
+        t = (mass - mid_mass) / (max_mass - mid_mass)
+        r = 255*t
+        g = 0
+        b = 255*(1-t)
+
+    return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
+
+def print_hex(text, hex_color):
+    # Remove the leading "#" and parse
+    hex_color = hex_color.lstrip("#")
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+    # Create the ANSI true-color escape sequence
+    return f"\033[38;2;{r};{g};{b}m{text}\033[0m"
+
+for i in range(-150, 150):
+    print(mass_to_color(i))
+
+print()
+print(mass_to_color(65.6))
+print(mass_to_color(106.56432423423))
+
+a = ['ass', 'class', 'fast', 'last']
+for i, e in enumerate(a):
+    print(f'{i} and {e}')
+
+
+
+
+
 ################################
 ##      OLD BUT GOLD BITCH    ##
 ################################

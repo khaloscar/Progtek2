@@ -7,6 +7,8 @@ import numpy as np
 class Particle:
 
     def __init__(self, canvas, mean_mass=25, spread='default'):
+        # mass distribution is lognormal
+        # area A = sqrt(Mass) w/ density = pi
         std = {'tight':0.1, "small":0.25, 'moderate':0.5, 'broad':0.75, 'wide':1, 'default':1.2}
         self.canvas = canvas
         mu = np.log(mean_mass) - 0.5*std[spread]**2
@@ -21,19 +23,22 @@ class Particle:
         self.color = self.mass_to_color()
 
     def mass_to_color(self, min_mass=1, mid_mass=50, max_mass=100):
+        # float to hexdec colormap
+
+        # real large masses are just white
         if self.mass > 300:
             return "#ffffff"
-        # Clamp mass safely
+        # make sure to stay within range no matter the mass
         mass = max(min(self.mass, max_mass), min_mass)
 
         if mass <= mid_mass:
-            # Interpolate from c1 → c2
+            # go from turqoise to blue
             t = (mass - min_mass) / (mid_mass - min_mass)
             r = 0
             g = 255*(1-t)
             b = 255
         else:
-            # Interpolate from c2 → c3
+            # from blue to red
             t = (mass - mid_mass) / (max_mass - mid_mass)
             r = 255*t
             g = 0
@@ -42,6 +47,7 @@ class Particle:
         return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
 
     def update_position(self):
+        # positional update from velocity
         self.x += self.vx
         self.y += self.vy
         self.canvas.move(self.id, self.vx, self.vy)
@@ -49,6 +55,7 @@ class Particle:
         r = self.radius
         restitution = 1.0
 
+        # bouncy wall
         if self.x - r < 0:
             self.x = r
             self.vx = -self.vx * restitution
@@ -64,6 +71,7 @@ class Particle:
             self.vy = -self.vy * restitution
 
     def update_velocity(self):
+        # velocity updates from acc
         self.vx += self.ax
         self.vy += self.ay
 
@@ -84,9 +92,19 @@ class Simulation:
         self.mean_mass = 25
         self.G = 0.5
         self.dt = 0.016
+        self.sim_hz = tk.DoubleVar(value=32)
 
         self.running = False
         self.after_id = None
+
+        self.top_frame = tk.Frame(root, width=self.screen_width)
+        self.top_frame.pack()
+        title_label = tk.Label(master=self.top_frame, text='God damn balls! 🔴', font=('Arial',12))
+        title_label.pack()
+        cheat_hint_label = tk.Label(master=self.top_frame, text="Hint: ← ↓ → ↑", font=('Arial',8))
+        cheat_hint_label.pack()
+        self.money_label = tk.Label(master=self.top_frame, text="", font=('Arial',10))
+        self.money_label.pack()
 
         self.canvas = tk.Canvas(root,
                                 width=self.screen_width,
@@ -97,7 +115,20 @@ class Simulation:
         self.bottom_frame = tk.Frame(root, bg="#fef2c8")
         self.bottom_frame.pack()
 
-        # Buttons
+        # Buttons / sliders / settings / entries
+
+        # slider
+        slider_frame = tk.Frame(master=self.bottom_frame, bg="#fef2c8", width=25)
+        slider_frame.pack(side=tk.RIGHT)
+        slider_entry = tk.Scale(slider_frame,
+                                    from_=1000, to=0.5, resolution=0.5, 
+                                    orient='vertical', variable=self.sim_hz,
+                                    label='Simulation speed'
+                                    )
+        slider_entry.set(32)
+        slider_entry.pack()
+
+        # buttons
         button_frame = tk.Frame(master=self.bottom_frame, bg="#fef2c8")
         button_frame.pack(side=tk.RIGHT,pady=10)
 
@@ -106,7 +137,7 @@ class Simulation:
         self.start_button.pack(side=tk.LEFT, padx=5), self.pause_button.pack(side=tk.LEFT, padx=5)
         self.pause_button.config(state="disabled")
 
-        # Inputs/settings
+        # entries
 
         input_frame = tk.Frame(master=self.bottom_frame, bg="#fef2c8")
         input_frame.pack(side=tk.RIGHT, pady=10)
@@ -114,15 +145,32 @@ class Simulation:
         mean_frame = tk.Frame(input_frame, bg="#fef2c8", width=25)
         mean_frame.pack()
         self.mean_entry = tk.Entry(mean_frame, fg="black", bg="white", width=25)
-        self.mean_label = tk.Label(mean_frame, text=f'Mean mass: {self.mean_mass}', bg="#fef2c8")
+        self.mean_label = tk.Label(mean_frame, text=f'Mean mass (1-200) | Current: {self.mean_mass}', bg="#fef2c8")
 
         n_particles_frame = tk.Frame(input_frame, bg="#fef2c8", width=25)
         n_particles_frame.pack()
         self.n_particles_entry = tk.Entry(n_particles_frame, fg="black", bg="white", width=25)
-        self.n_particles_label = tk.Label(n_particles_frame, text=f'N particles: {self.num_particles}', bg="#fef2c8")
+        self.n_particles_label = tk.Label(n_particles_frame, text=f'N particles (1-200) | Current: {self.num_particles}', bg="#fef2c8")
 
         self.mean_label.pack(), self.mean_entry.pack(padx=5) 
-        self.n_particles_label.pack(), self.n_particles_entry.pack(padx=5) 
+        self.n_particles_label.pack(), self.n_particles_entry.pack(padx=5)
+
+        # Cheats and $$$ label thingy majingy
+        self.money = 0
+        self.history = ['']*4
+        root.bind_all('<Key>', self.on_key)
+
+
+    def on_key(self, event):
+        # press correct keys in correct order get many roubles
+        k = event.keysym
+        if k in ["Left", "Down", "Right", "Up"]:
+            self.history = self.history[1:] + [k]
+
+            if self.history == ["Left", "Down", "Right", "Up"]:
+                self.money += 250000
+                self.history = ['']*4
+                self.money_label.config(text=f'{self.money} ₽₽₽', fg='black')
 
     def create_particles(self):
         self.canvas.delete('all')
@@ -154,6 +202,7 @@ class Simulation:
     def update_acc(self):
         particles = self.particles
         n_particles = len(particles)
+        # maybe unneccessary
         ax, ay = [0]*n_particles, [0]*n_particles
 
         i = 0
@@ -165,10 +214,10 @@ class Simulation:
                 
                 # F = G m1 m2 / dist*2, force direction given by vec (x2-x1)/dist -> F = Gm1m2(x2-x1)/dist**3
                 # a1 = Gm2(x2-x1)/dist**3
-                # a2 = Gm1(x2-x1)/dist**3
+                # a2 = -Gm1(x2-x1)/dist**3
                 dx = p2.x - p1.x
                 dy = p2.y - p1.y
-                dist = math.sqrt((dx)**2 + (dy)**2 + 0.01)
+                dist = math.sqrt((dx)**2 + (dy)**2)
     
                 facx, facy = self.G*dx/dist**3, self.G*dy/dist**3
                 ax[i] += facx*p2.mass
@@ -186,9 +235,13 @@ class Simulation:
     def start_simulation(self):
         self._stop_loop()
         mean_entry = self.mean_entry.get()
+
+        # try to convert user input to numbers, 
+        # if error or outsided hardcoded range 
+        # go to default value or range boundary
         try:
             mean_entry = float(mean_entry)
-            mean_entry = min(max(mean_entry,5), 100)
+            mean_entry = min(max(mean_entry,1), 200)
             self.mean_mass = mean_entry
         except ValueError:
             self.mean_mass = 25
@@ -196,23 +249,25 @@ class Simulation:
         n_particles_entry = self.n_particles_entry.get()
         try:
             n_particles_entry = int(n_particles_entry)
-            n_particles_entry = min(max(2, n_particles_entry), 101)
-            self.n_particles_entry = n_particles_entry
+            n_particles_entry = min(max(1, n_particles_entry), 200)
+            self.num_particles = n_particles_entry
         except ValueError:
-            self.n_particles_entry = 50
+            self.num_particles = 50
 
-        self.mean_label.config(text=f'Mean mass: {self.mean_mass}')
-        self.n_particles_label.config(text=f'N particles: {self.num_particles}')
-
-
+        # button updates
+        self.mean_label.config(text=f'Mean mass (1-200) | Current: {self.mean_mass}')
+        self.n_particles_label.config(text=f'N particles (1-200) | Current: {self.num_particles}')
         self.pause_button.config(state="normal", text="Pause")
         self.start_button.config(text="Restart")
+
         self.running = True
         self.create_particles()
         self._schedule_next()
 
     def _schedule_next(self):
-        self.after_id = self.root.after(10, self.update_simulation)
+        # hz to milisec
+        milisec = 1000/self.sim_hz.get()
+        self.after_id = self.root.after(int(milisec), self.update_simulation)
 
     def _stop_loop(self):
         if self.after_id is not None:
@@ -255,6 +310,7 @@ class Simulation:
                 i += 1
 
     def check_particle_collision(self, p1: Particle,p2: Particle) -> bool:
+        # collide if dist**2 <= total radius **2
         center_distance  = (p1.x - p2.x)**2 + (p1.y - p2.y)**2
         total_radius = (p1.radius + p2.radius)**2
         if center_distance <= total_radius:

@@ -1,54 +1,53 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import tkinter as tk
 
-def mass_to_color(mass, min_mass=1, mid_mass=50, max_mass=100):
-    if mass> 300:
-        return "#ffffff"
-    # Clamp mass safely
-    mass = max(min(mass, max_mass), min_mass)
+class Cheat:
+    def __init__(self, root):
+        self.root = root
+        self.money = 0
+        # keep the last N keys (maxlen = length of the secret sequence)
+        self.history = ['']*4
 
-    # Define RGB anchors
-    c1 = (0, 255, 255)  # turquoise
-    c2 = (0, 0, 255)    # blue
-    c3 = (255, 0, 0)    # red
+        # define the secret (example sequence)
+        self.secret = ["Left", "Down", "Right", "Up"]
 
-    if mass <= mid_mass:
-        # Interpolate from c1 → c2
-        t = (mass - min_mass) / (mid_mass - min_mass)
-        r = 0
-        g = 255*(1-t)
-        b = 255
-    else:
-        # Interpolate from c2 → c3
-        t = (mass - mid_mass) / (max_mass - mid_mass)
-        r = 255*t
-        g = 0
-        b = 255*(1-t)
+        # bind keypresses (use bind_all so it works regardless of focused widget)
+        # alternative: root.bind('<Key>', self.on_key)
+        root.bind_all('<Key>', self.on_key)
 
-    return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
+    def on_key(self, event):
+        # event.keysym is e.g. 'Left', 'a', 'Return', etc.
+        k = event.keysym
+        if k in ["Left", "Down", "Right", "Up"]:
+            # append to history
+            self.history = self.history[1:] + [k]
 
-def print_hex(text, hex_color):
-    # Remove the leading "#" and parse
-    hex_color = hex_color.lstrip("#")
-    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        # debug print
+        #print("keys:", self.history)
 
-    # Create the ANSI true-color escape sequence
-    return f"\033[38;2;{r};{g};{b}m{text}\033[0m"
+        # check if the last keys equal the secret
+        if self.history == self.secret:
+            self.reward()
+            # reset history (or you can clear to allow repeated triggers)
+            self.history = ['']*4
 
-for i in range(-150, 150):
-    print(mass_to_color(i))
+    def reward(self):
+        self.money += 25000000
+        print(f"$$${self.money}")
 
-print()
-print(mass_to_color(65.6))
-print(mass_to_color(106.56432423423))
+# Minimal GUI to test
+if __name__ == '__main__':
+    root = tk.Tk()
+    root.geometry("400x200")
+    root.title("Cheat demo - press Left,Down,Right,Up")
 
-a = ['ass', 'class', 'fast', 'last']
-for i, e in enumerate(a):
-    print(f'{i} and {e}')
+    cheat = Cheat(root)
 
+    tk.Label(root, text="Type the sequence: Left Down Right Up").pack(pady=20)
+    tk.Label(root, text="Open the terminal to see debug prints.").pack()
 
-
-
+    root.mainloop()
 
 ################################
 ##      OLD BUT GOLD BITCH    ##
@@ -137,6 +136,7 @@ if False:
         i +=1
 
 if False:
+
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
     window_width = screen_width/3
@@ -156,3 +156,50 @@ if False:
 
     window.title('Is this centered??')
     window.geometry(newGeometry=f"{int(window_width)}x{int(window_width-200)+150}+{int(window_pos_x)}+{int(window_pos_y)}")
+
+if False:
+    def mass_to_color(mass, min_mass=1, mid_mass=50, max_mass=100):
+        if mass> 300:
+            return "#ffffff"
+        # Clamp mass safely
+        mass = max(min(mass, max_mass), min_mass)
+
+        # Define RGB anchors
+        c1 = (0, 255, 255)  # turquoise
+        c2 = (0, 0, 255)    # blue
+        c3 = (255, 0, 0)    # red
+
+        if mass <= mid_mass:
+            # Interpolate from c1 → c2
+            t = (mass - min_mass) / (mid_mass - min_mass)
+            r = 0
+            g = 255*(1-t)
+            b = 255
+        else:
+            # Interpolate from c2 → c3
+            t = (mass - mid_mass) / (max_mass - mid_mass)
+            r = 255*t
+            g = 0
+            b = 255*(1-t)
+
+        return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
+
+    def print_hex(text, hex_color):
+        # Remove the leading "#" and parse
+        hex_color = hex_color.lstrip("#")
+        r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+        # Create the ANSI true-color escape sequence
+        return f"\033[38;2;{r};{g};{b}m{text}\033[0m"
+
+    for i in range(-150, 150):
+        print(mass_to_color(i))
+
+    print()
+    print(mass_to_color(65.6))
+    print(mass_to_color(106.56432423423))
+
+    a = ['ass', 'class', 'fast', 'last']
+    for i, e in enumerate(a):
+        print(f'{i} and {e}')
+

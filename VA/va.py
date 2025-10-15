@@ -13,7 +13,7 @@ class Particle:
         self.canvas = canvas
         mu = np.log(mean_mass) - 0.5*std[spread]**2
         self.mass = np.random.lognormal(mu, std[spread])
-        self.radius = math.sqrt(self.mass)
+        self.radius = math.sqrt(math.sqrt(self.mass))
         self.x = rnd.uniform(self.radius, float(self.canvas['width']) - self.radius)
         self.y = rnd.uniform(self.radius, float(self.canvas['height']) - self.radius)
         self.vx = 0
@@ -82,8 +82,8 @@ class Simulation:
         self.root.title('God damn balls! 🔴')
         
         # Screen settings px
-        self.screen_width = 1600
-        self.screen_height = 900
+        self.screen_width = 2560
+        self.screen_height = 1200
 
         # Standard particle generation, log-normal distribution of mass
         # Standard values
@@ -321,7 +321,7 @@ class Simulation:
     def merge_particle_params(self, p1:Particle, p2: Particle):
         # New particle params
         new_mass = p1.mass + p2.mass
-        new_radius = math.sqrt(new_mass)
+        new_radius = math.sqrt(math.sqrt(new_mass))
         new_x  = (p1.mass * p1.x + p2.mass * p2.x)/new_mass
         new_y  = (p1.mass * p1.y + p2.mass * p2.y)/new_mass
         new_vx = (p1.mass * p1.vx + p2.mass * p2.vx)/new_mass
